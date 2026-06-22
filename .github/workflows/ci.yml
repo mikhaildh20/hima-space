@@ -99,12 +99,12 @@ jobs:
         run: npm run build
 
       - name: Deploy to Staging (via webhook)
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: ${{ secrets.DEPLOY_WEBHOOK_URL }}
-          method: 'POST'
-          customHeaders: '{"X-Webhook-Secret": "${{ secrets.WEBHOOK_SECRET }}"}'
-          data: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "branch": "${{ github.ref_name }}", "env": "staging"}'
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Hub-Signature-256: sha256=$(echo -n '{\"ref\": \"${{ github.ref }}\", \"after\": \"${{ github.sha }}\", \"repository\": {\"name\": \"hima-space\"}}' | openssl dgst -sha256 -hmac "3aca36006c0770a2326c903bcceec8b2514415b79b9b9cde231c4b23cddde07a" | awk '{print $2}')" \
+            -d '{"ref": "refs/heads/master", "after": "${{ github.sha }}", "repository": {"name": "hima-space"}, "head_commit": {"id": "${{ github.sha }}", "author": {"name": "${{ github.actor }}"}}}' \
+            http://localhost:3000/
 
   deploy-production:
     needs: test
@@ -130,12 +130,12 @@ jobs:
         run: npm run build
 
       - name: Deploy to Production (via webhook)
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: ${{ secrets.DEPLOY_WEBHOOK_URL }}
-          method: 'POST'
-          customHeaders: '{"X-Webhook-Secret": "${{ secrets.WEBHOOK_SECRET }}"}'
-          data: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "branch": "${{ github.ref_name }}", "env": "production"}'
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Hub-Signature-256: sha256=$(echo -n '{\"ref\": \"${{ github.ref }}\", \"after\": \"${{ github.sha }}\", \"repository\": {\"name\": \"hima-space\"}}' | openssl dgst -sha256 -hmac "3aca36006c0770a2326c903bcceec8b2514415b79b9b9cde231c4b23cddde07a" | awk '{print $2}')" \
+            -d '{"ref": "refs/heads/master", "after": "${{ github.sha }}", "repository": {"name": "hima-space"}, "head_commit": {"id": "${{ github.sha }}", "author": {"name": "${{ github.actor }}"}}}' \
+            http://localhost:3000/
 
   notify:
     needs: [test]
