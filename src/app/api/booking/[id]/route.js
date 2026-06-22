@@ -12,7 +12,8 @@ export async function GET(request, { params }) {
     }
 
     const { id: userId, role } = authResult.user;
-    const bookingId = parseInt(params.id);
+    const resolvedParams = await params;
+    const bookingId = parseInt(resolvedParams.id);
 
     if (isNaN(bookingId)) {
       return NextResponse.json({ status: 'error', message: 'ID tidak valid' }, { status: 422 });

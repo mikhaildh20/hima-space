@@ -11,7 +11,8 @@ export async function GET(request, { params }) {
       return NextResponse.json({ status: 'error', message: authResult.error }, { status: 401 });
     }
 
-    const roomId = parseInt(params.id);
+    const resolvedParams = await params;
+    const roomId = parseInt(resolvedParams.id);
     if (isNaN(roomId)) {
       return NextResponse.json({ status: 'error', message: 'ID tidak valid' }, { status: 422 });
     }
@@ -50,7 +51,8 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ status: 'error', message: 'Akses ditolak' }, { status: 403 });
     }
 
-    const roomId = parseInt(params.id);
+    const resolvedParams = await params;
+    const roomId = parseInt(resolvedParams.id);
     if (isNaN(roomId)) {
       return NextResponse.json({ status: 'error', message: 'ID tidak valid' }, { status: 422 });
     }
@@ -140,7 +142,8 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ status: 'error', message: 'Akses ditolak' }, { status: 403 });
     }
 
-    const roomId = parseInt(params.id);
+    const resolvedParams = await params;
+    const roomId = parseInt(resolvedParams.id);
     if (isNaN(roomId)) {
       return NextResponse.json({ status: 'error', message: 'ID tidak valid' }, { status: 422 });
     }
