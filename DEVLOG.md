@@ -86,3 +86,11 @@ Single source of truth for the narrative execution of the HIMA Space project.
 - **Blockers & Fixes**: None.
 - **Next Steps**: Start `T-012` (Booking List & History UI).
 - **Commit**: `92b956b`
+
+### [2026-06-22 23:35] - Task: T-012 - Booking List & History UI (Antigravity Orchestrator)
+- **Summary**: Created the booking history page `/histori` supporting filters and pagination.
+- **Technical Decisions**: Implemented status filters tabs, paginated rendering using API query limits, owner checking for cancellation triggers, and a cancellation confirming modal.
+- **Blockers & Fixes**: None.
+- **Next Steps**: Start `T-013` (Dashboard & Approval UI).
+- **Commit**: `2c3a43b`
+
