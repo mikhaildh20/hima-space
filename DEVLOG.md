@@ -94,3 +94,9 @@ Single source of truth for the narrative execution of the HIMA Space project.
 - **Next Steps**: Start `T-013` (Dashboard & Approval UI).
 - **Commit**: `2c3a43b`
 
+### [2026-06-22 23:40] - Task: T-013 - Dashboard & Approval UI (Antigravity Orchestrator)
+- **Summary**: Implemented the admin dashboard `/admin/dashboard` and admin approval panel `/admin/approval`.
+- **Technical Decisions**: Developed role redirection checks to protect admin routes. Populated `/admin/dashboard` with dynamic room and daily booking metrics. Built the `/admin/approval` list with interactive approve PATCH handlers and a reject modal submitting custom reasons.
+- **Blockers & Fixes**: None.
+- **Next Steps**: Start `T-014` (Jest Unit & Integration Setup).
+- **Commit**: `2a0db0c`
