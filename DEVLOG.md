@@ -100,3 +100,10 @@ Single source of truth for the narrative execution of the HIMA Space project.
 - **Blockers & Fixes**: None.
 - **Next Steps**: Start `T-014` (Jest Unit & Integration Setup).
 - **Commit**: `2a0db0c`
+
+### [2026-06-22 23:45] - Task: T-014 - Jest Unit & Integration Tests (Antigravity Orchestrator)
+- **Summary**: Installed Jest, Supertest, and configured standard API and validation testing suites.
+- **Technical Decisions**: Configured `jest.config.js` for App Router compatibility and Node test environment. Added unit tests for time/date/email validation helper functions. Developed integration tests invoking dynamic Next.js App Router API handlers directly with standard `NextRequest` and database fixtures.
+- **Blockers & Fixes**: Fixed Prisma schema incompatibility where `ruangan` facilities were expecting a JSON-stringified string rather than an array.
+- **Next Steps**: Start `T-015` (Cypress E2E Setup & Tests).
+- **Commit**: `08c84b3`
