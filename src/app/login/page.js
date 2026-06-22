@@ -66,7 +66,7 @@ export default function LoginPage() {
             HIMA <span className="text-blue-500 font-medium">Space</span>
           </h2>
           <p className="mt-2 text-sm text-gray-500">
-            Booking & Kelola Ruangan Organisasi Mahasiswa
+            Booking & Kelola Ruangan Ormawa
           </p>
         </div>
 
