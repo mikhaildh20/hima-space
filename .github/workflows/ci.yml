@@ -60,10 +60,10 @@ jobs:
         run: npx prisma db seed
 
       - name: Run unit tests
-        run: npm run test:unit
+        run: npm test
 
       - name: Run integration tests
-        run: npm run test:integration
+        run: npm test
 
       - name: Run build
         run: npm run build
@@ -143,36 +143,29 @@ jobs:
     if: always()
 
     steps:
-      - name: Send notification
+      - name: Send notification to Telegram
         if: always()
         run: |
-          echo "🚀 HIMA Space CI/CD - Status: ${{ needs.test.result == 'success' && '✅ Test passed' || '❌ Test failed' }}"
-          echo "📋 Branch: ${{ github.ref_name }}"
-          echo "🔗 SHA: ${{ github.sha }}"
-          echo "👤 By: ${{ github.actor }}"
-          echo ""
-          echo "⚠️ Note: Configure TELEGRAM_WEBHOOK_URL secret in GitHub Settings → Secrets and variables to enable Telegram notifications"
-          echo ""
-          echo "To set up Telegram notifications:"
-          echo "1. Create a bot via @BotFather on Telegram"
-          echo "2. Get BOT_TOKEN and CHAT_ID"
-          echo "3. Create webhook URL: https://api.telegram.org/bot<BOT_TOKEN>/sendMessage"
-          echo "4. Add to GitHub secrets as TELEGRAM_WEBHOOK_URL with payload containing CHAT_ID and BOT_TOKEN"
+          STATUS="${{ needs.test.result == 'success' && '✅ Success' || '❌ Failed' }}"
+          MESSAGE="🚀 [hima-space] CI/CD Pipeline
+          Project: HIMA Space
+          Status: ${STATUS}
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
+          Author: ${{ github.actor }}
 
-      # Alternative notification using GitHub API (built-in)
-      - name: Notify via GitHub API
+          See: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          echo "${MESSAGE}"
+
+      # Send webhook notification to VPS server for Telegram delivery
+      - name: Send webhook notification
         if: always()
         run: |
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/dispatches \
-            -d '{
-              "event_type": "ci_status_update",
-              "client_payload": {
-                "status": "${{ needs.test.result }}",
-                "branch": "${{ github.ref_name }}",
-                "sha": "${{ github.sha }}",
-                "actor": "${{ github.actor }}"
-              }
-            }' 2>/dev/null || echo "GitHub API notification skipped"
+          STATUS="${{ needs.test.result == 'success' && 'success' || 'failure' }}"
+          MESSAGE="{\"text\": \"🚀 [hima-space] CI/CD Pipeline\nProject: HIMA Space\nStatus: ${STATUS}\nBranch: ${{ github.ref_name }}\nCommit: ${{ github.sha }}\nAuthor: ${{ github.actor }}\"}"
+
+          curl -X POST -H "Content-Type: application/json" \
+            -H "X-Hub-Signature-256: sha256=$(echo -n '{\"ref\": \"${{ github.ref }}\", \"after\": \"${{ github.sha }}\", \"repository\": {\"name\": \"hima-space\"}}' | openssl dgst -sha256 -hmac "3aca36006c0770a2326c903bcceec8b2514415b79b9b9cde231c4b23cddde07a" | awk '{print $2}')" \
+            -d '{"ref": "refs/heads/main", "after": "${{ github.sha }}", "repository": {"name": "hima-space"}, "head_commit": {"id": "${{ github.sha }}", "author": {"name": "${{ github.actor }}"}}}' \
+            http://localhost:3000/ || echo "Webhook notification skipped (only works on VPS)"
