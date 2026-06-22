@@ -4,7 +4,6 @@ This backlog tracks the status of tasks in HIMA Space execution.
 
 ## To Do
 
-- [ ] `T-014` - Jest Unit & Integration Tests
 - [ ] `T-015` - Cypress End-to-End Tests
 
 ## In Progress
@@ -26,6 +25,7 @@ This backlog tracks the status of tasks in HIMA Space execution.
 - [x] `T-011` - Room Management UI
 - [x] `T-012` - Booking List & History UI
 - [x] `T-013` - Dashboard & Approval UI
+- [x] `T-014` - Jest Unit & Integration Tests
 
 ## Blocked
 
