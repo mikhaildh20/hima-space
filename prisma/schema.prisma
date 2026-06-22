@@ -1,0 +1,84 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Role {
+  admin
+  mahasiswa
+}
+
+enum StatusBooking {
+  Pending
+  Approved
+  Rejected
+  Cancelled
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model User {
+  id        Int       @id @default(autoincrement())
+  nama      String
+  email     String    @unique
+  password  String    // bcrypt hashed, 60 chars
+  role      Role      @default(mahasiswa)
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("users")
+  @@index([email])
+}
+
+model Ruangan {
+  id        Int       @id @default(autoincrement())
+  nama      String    @unique
+  kapasitas Int
+  fasilitas String    // JSON array: '["AC","Proyektor"]'
+  deskripsi String?
+  aktif     Boolean   @default(true)
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("ruangan")
+  @@index([aktif])
+  @@index([nama])
+}
+
+model Booking {
+  id           Int            @id @default(autoincrement())
+  judul        String
+  deskripsi    String?
+  ruanganId    Int
+  userId       Int
+  tanggal      DateTime       // date only
+  jamMulai     String         // "HH:mm" 24h format
+  jamSelesai   String         // "HH:mm" 24h format
+  status       StatusBooking  @default(Pending)
+  rejectReason String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  ruangan Ruangan @relation(fields: [ruanganId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("bookings")
+  @@index([ruanganId, tanggal, status])  // Conflict detection index
+  @@index([userId, status])              // User booking history
+  @@index([status])                      // Pending queue
+  @@index([tanggal])                     // Dashboard date filter
+}
