@@ -107,3 +107,11 @@ Single source of truth for the narrative execution of the HIMA Space project.
 - **Blockers & Fixes**: Fixed Prisma schema incompatibility where `ruangan` facilities were expecting a JSON-stringified string rather than an array.
 - **Next Steps**: Start `T-015` (Cypress E2E Setup & Tests).
 - **Commit**: `08c84b3`
+
+### [2026-06-22 23:50] - Task: T-015 - Cypress E2E Setup & Tests (Antigravity Orchestrator)
+- **Summary**: Installed Cypress, configured E2E test environments, and implemented tests for the core workflows.
+- **Technical Decisions**: Set up `cypress.config.js` to execute headless tests. Wrote `cypress/e2e/booking.cy.js` containing specs for the full sequence: student login -> book room -> admin approval console -> verify approved -> student cancel booking.
+- **Blockers & Fixes**: Fixed Next.js v16 deprecation errors on dynamic route parameters by unwrapping `params` as a Promise across all Dynamic Route handlers (`/api/booking/[id]/*` and `/api/ruangan/[id]`). Adjusted Cypress selector for the dropdown to dynamically locate and select the room options by substring mapping.
+- **Next Steps**: Build production build bundle and complete walkthrough documentation.
+- **Commit**: `9f3e86f`
+
