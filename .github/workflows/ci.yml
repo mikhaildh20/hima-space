@@ -2,14 +2,12 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [master, main]
+    branches: [main]
   pull_request:
-    branches: [master, main]
+    branches: [main]
 
 env:
   NODE_VERSION: '18'
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
   test:
@@ -45,8 +43,8 @@ jobs:
       - name: Setup environment
         run: |
           cat > .env << EOF
-          DATABASE_URL=postgresql://hima_user:hima_pass@localhost:5432/hima_space_test?schema=public
-          JWT_SECRET=test-secret-for-ci-only-32chars
+          DATABASE_URL=postgresql://hima_user:***@localhost:5432/hima_space_test?schema=public
+          JWT_SECRET=test-jwt-secret-key-min-32-chars
           NODE_ENV=test
           EOF
 
@@ -59,83 +57,11 @@ jobs:
       - name: Run seed
         run: npx prisma db seed
 
-      - name: Run unit tests
-        run: npm test
-
-      - name: Run integration tests
+      - name: Run tests
         run: npm test
 
       - name: Run build
         run: npm run build
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        if: always()
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage/lcov.info
-
-  deploy-staging:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma Client
-        run: npx prisma generate
-
-      - name: Build
-        run: npm run build
-
-      - name: Deploy to Staging (via webhook)
-        run: |
-          curl -X POST \
-            -H "Content-Type: application/json" \
-            -H "X-Hub-Signature-256: sha256=$(echo -n '{\"ref\": \"${{ github.ref }}\", \"after\": \"${{ github.sha }}\", \"repository\": {\"name\": \"hima-space\"}}' | openssl dgst -sha256 -hmac "3aca36006c0770a2326c903bcceec8b2514415b79b9b9cde231c4b23cddde07a" | awk '{print $2}')" \
-            -d '{"ref": "refs/heads/master", "after": "${{ github.sha }}", "repository": {"name": "hima-space"}, "head_commit": {"id": "${{ github.sha }}", "author": {"name": "${{ github.actor }}"}}}' \
-            http://localhost:3000/
-
-  deploy-production:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma Client
-        run: npx prisma generate
-
-      - name: Build
-        run: npm run build
-
-      - name: Deploy to Production (via webhook)
-        run: |
-          curl -X POST \
-            -H "Content-Type: application/json" \
-            -H "X-Hub-Signature-256: sha256=$(echo -n '{\"ref\": \"${{ github.ref }}\", \"after\": \"${{ github.sha }}\", \"repository\": {\"name\": \"hima-space\"}}' | openssl dgst -sha256 -hmac "3aca36006c0770a2326c903bcceec8b2514415b79b9b9cde231c4b23cddde07a" | awk '{print $2}')" \
-            -d '{"ref": "refs/heads/master", "after": "${{ github.sha }}", "repository": {"name": "hima-space"}, "head_commit": {"id": "${{ github.sha }}", "author": {"name": "${{ github.actor }}"}}}' \
-            http://localhost:3000/
 
   notify:
     needs: [test]
@@ -143,29 +69,18 @@ jobs:
     if: always()
 
     steps:
-      - name: Send notification to Telegram
+      - name: Send test result notification
         if: always()
         run: |
-          STATUS="${{ needs.test.result == 'success' && '✅ Success' || '❌ Failed' }}"
-          MESSAGE="🚀 [hima-space] CI/CD Pipeline
-          Project: HIMA Space
-          Status: ${STATUS}
-          Branch: ${{ github.ref_name }}
-          Commit: ${{ github.sha }}
-          Author: ${{ github.actor }}
+          STATUS="${{ needs.test.result == 'success' && 'Lulus' || 'Gagal' }}"
+          
+          MESSAGE="🚀 CI/CD Pipeline - HIMA Space
+          
+Status: ${STATUS}
+Branch: ${{ github.ref_name }}
+Commit: ${{ github.sha }}
+Author: ${{ github.actor }}
+          
+Lihat: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-          See: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          echo "${MESSAGE}"
-
-      # Send webhook notification to VPS server for Telegram delivery
-      - name: Send webhook notification
-        if: always()
-        run: |
-          STATUS="${{ needs.test.result == 'success' && 'success' || 'failure' }}"
-          MESSAGE="{\"text\": \"🚀 [hima-space] CI/CD Pipeline\nProject: HIMA Space\nStatus: ${STATUS}\nBranch: ${{ github.ref_name }}\nCommit: ${{ github.sha }}\nAuthor: ${{ github.actor }}\"}"
-
-          curl -X POST -H "Content-Type: application/json" \
-            -H "X-Hub-Signature-256: sha256=$(echo -n '{\"ref\": \"${{ github.ref }}\", \"after\": \"${{ github.sha }}\", \"repository\": {\"name\": \"hima-space\"}}' | openssl dgst -sha256 -hmac "3aca36006c0770a2326c903bcceec8b2514415b79b9b9cde231c4b23cddde07a" | awk '{print $2}')" \
-            -d '{"ref": "refs/heads/main", "after": "${{ github.sha }}", "repository": {"name": "hima-space"}, "head_commit": {"id": "${{ github.sha }}", "author": {"name": "${{ github.actor }}"}}}' \
-            http://localhost:3000/ || echo "Webhook notification skipped (only works on VPS)"
+          echo "::notice title=CI/CD Notification::${MESSAGE}"
